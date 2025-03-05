@@ -10,20 +10,19 @@ dotenv.config();
 
 const router = express.Router();
 
-// ✅ Forgot Password Route
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
 
   if (!user) return res.status(400).json({ message: "User not found" });
 
-  // ❌ Old Token Delete First (Avoid Duplicate Tokens)
+  //  Avoid Duplicate Tokens
   await PasswordResetToken.deleteOne({ email });
 
-  // ✅ Generate Secure Token & Expiry
+  //  Secure Token & Expiry
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + 1); // Token expires in 1 hour
+  expiresAt.setHours(expiresAt.getDay() + 3); // Token expires in 3 day
 
   await new PasswordResetToken({ email, token, expiresAt }).save();
 
@@ -39,7 +38,7 @@ router.post("/forgot-password", async (req, res) => {
   res.json({ message: "Password reset link sent to your email" });
 });
 
-// ✅ Reset Password Route
+// Reset Password Route
 router.post("/reset-password/:token", async (req, res) => {
   const { token } = req.params;
   const { newPassword } = req.body;
@@ -47,7 +46,7 @@ router.post("/reset-password/:token", async (req, res) => {
   const resetToken = await PasswordResetToken.findOne({ token });
   if (!resetToken) return res.status(400).json({ message: "Invalid token" });
 
-  // ❌ Expired Token Check
+  //  Expired Token Check
   if (resetToken.expiresAt < new Date()) {
     await PasswordResetToken.deleteOne({ token });
     return res.status(400).json({ message: "Token expired" });
@@ -60,13 +59,13 @@ router.post("/reset-password/:token", async (req, res) => {
   user.password = hashedPassword;
   await user.save();
 
-  // ✅ Delete Token After Use
+  //  Delete Token After Use
   await PasswordResetToken.deleteOne({ token });
 
   res.json({ message: "Password reset successful" });
 });
 
-// ✅ Signup Route (Fixed)
+// Signup Route (Fixed)
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -81,18 +80,21 @@ router.post("/signup", async (req, res) => {
 
     await newUser.save();
 
-    // ✅ Generate Token After Signup
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    //  Generate Token After Signup
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "3d",
+    });
 
-    res.status(201).json({ message: "User registered successfully", token, user: newUser });
+    res
+      .status(201)
+      .json({ message: "User registered successfully", token, user: newUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error registering user" });
   }
 });
 
-
-// ✅ Login Route
+// Login Route
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -107,14 +109,16 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid Email or Password" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "3d",
+    });
     res.status(200).json({ token, user });
   } catch (err) {
     res.status(500).json({ message: "Server Error" });
   }
 });
 
-// ✅ Get Logged-in User Info
+//  Get Logged-in User Info
 router.get("/me", ensureAuthenticated, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");

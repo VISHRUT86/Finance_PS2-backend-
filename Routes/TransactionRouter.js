@@ -3,42 +3,37 @@ const router = express.Router();
 const fs = require("fs");
 const path = require("path");
 const fastCsv = require("fast-csv");
-const Income = require("../Models/Income"); // ✅ Income Model
-const Expense = require("../Models/Expense"); // ✅ Expense Model
+const Income = require("../Models/Income");
+const Expense = require("../Models/Expense");
 
 router.get("/export", async (req, res) => {
-    try {
-        // ✅ Fetch all transactions (income + expenses)
-        const incomes = await Income.find({});
-        const expenses = await Expense.find({});
-        
-        // ✅ Merge and format data
-        const transactions = [...incomes, ...expenses].map((item) => ({
-            Type: item.__t === "Income" ? "Income" : "Expense", // ✅ Correct Type
-            Amount: item.amount,
-            Category: item.category,
-            Date: new Date(item.date).toISOString().split('T')[0], // ✅ Only Date (YYYY-MM-DD)
-        }));
+  try {
+    const incomes = await Income.find({});
+    const expenses = await Expense.find({});
 
-        // ✅ File path
-        const filePath = path.join(__dirname, "../exports/transactions.csv");
-        const ws = fs.createWriteStream(filePath);
+    const transactions = [...incomes, ...expenses].map((item) => ({
+      Type: item.__t === "Income" ? "Income" : "Expense",
+      Amount: item.amount,
+      Category: item.category,
+      Date: new Date(item.date).toISOString().split("T")[0],
+    }));
 
-        // ✅ Write CSV
-        fastCsv
-            .write(transactions, { headers: true })
-            .pipe(ws)
-            .on("finish", () => {
-                res.download(filePath, "transactions.csv", (err) => {
-                    if (err) console.error("Download Error:", err);
-                });
-            });
+    const filePath = path.join(__dirname, "../exports/transactions.csv");
+    const ws = fs.createWriteStream(filePath);
 
-    } catch (error) {
-        console.error("CSV Export Error:", error);
-        res.status(500).json({ message: "Error generating CSV" });
-    }
+    // csv
+    fastCsv
+      .write(transactions, { headers: true })
+      .pipe(ws)
+      .on("finish", () => {
+        res.download(filePath, "transactions.csv", (err) => {
+          if (err) console.error("Download Error:", err);
+        });
+      });
+  } catch (error) {
+    console.error("CSV Export Error:", error);
+    res.status(500).json({ message: "Error generating CSV" });
+  }
 });
-
 
 module.exports = router;

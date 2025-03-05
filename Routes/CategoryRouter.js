@@ -1,10 +1,10 @@
 const express = require("express");
-const mongoose = require("mongoose"); // ✅ FIX: Import mongoose
+const mongoose = require("mongoose"); 
 
 const Category = require("../Models/Category");
 const router = express.Router();
 
-// ➕ Add New Category
+
 router.post("/add", async (req, res) => {
   try {
     const { name } = req.body;
@@ -17,7 +17,7 @@ router.post("/add", async (req, res) => {
   }
 });
 
-// 📜 Get All Categories
+
 router.get("/all", async (req, res) => {
   try {
     const categories = await Category.find();
@@ -27,12 +27,12 @@ router.get("/all", async (req, res) => {
   }
 });
 
-// 🗑️ Delete Category with Validation
+
 router.delete("/delete/:id", async (req, res) => {
     try {
       const { id } = req.params;
   
-      // ✅ Check if ID is a valid MongoDB ObjectId
+   
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ error: "Invalid Category ID" });
       }
@@ -45,7 +45,7 @@ router.delete("/delete/:id", async (req, res) => {
       await Category.findByIdAndDelete(id);
       res.json({ message: "Category deleted successfully" });
     } catch (error) {
-      console.error("Delete Error:", error);
+      console.log("Delete Error:", error);
       res.status(500).json({ error: "Error deleting category" });
     }
   });

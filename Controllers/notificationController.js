@@ -4,7 +4,7 @@ exports.getNotifications = async (req, res) => {
     try {
         const notifications = await Notification.find({ isRead: false }).sort({ createdAt: -1 });
 
-        // ✅ Mark all notifications as read
+        //  Mark all notifications as read
         await Notification.updateMany({ isRead: false }, { isRead: true });
 
         res.status(200).json(notifications);

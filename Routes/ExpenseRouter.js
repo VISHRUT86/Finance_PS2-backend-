@@ -1,9 +1,8 @@
 const express = require("express");
 const Expense = require("../Models/Expense");
-const ensureAuthenticated = require("../Middlewares/Auth"); 
+const ensureAuthenticated = require("../Middlewares/Auth");
 const router = express.Router();
 
-// ➕ Add Expense
 router.post("/add", ensureAuthenticated, async (req, res) => {
   try {
     const { category, amount, date, description } = req.body;
@@ -12,7 +11,7 @@ router.post("/add", ensureAuthenticated, async (req, res) => {
       category,
       amount,
       date,
-      description
+      description,
     });
     await newExpense.save();
     res.status(201).json({ message: "Expense added successfully" });
@@ -22,7 +21,6 @@ router.post("/add", ensureAuthenticated, async (req, res) => {
   }
 });
 
-// 📜 Get All Expenses (For Logged-in User)
 router.get("/all", ensureAuthenticated, async (req, res) => {
   try {
     const expenses = await Expense.find({ user: req.user.id });
@@ -32,7 +30,6 @@ router.get("/all", ensureAuthenticated, async (req, res) => {
   }
 });
 
-// ✏️ Update Expense
 router.put("/update/:id", ensureAuthenticated, async (req, res) => {
   try {
     const { category, amount, date, description } = req.body;
@@ -40,7 +37,7 @@ router.put("/update/:id", ensureAuthenticated, async (req, res) => {
       category,
       amount,
       date,
-      description
+      description,
     });
     res.json({ message: "Expense updated successfully" });
   } catch (error) {
@@ -48,25 +45,24 @@ router.put("/update/:id", ensureAuthenticated, async (req, res) => {
   }
 });
 
-
-// ❌ Delete Expense (Fixed)
 router.delete("/delete/:id", ensureAuthenticated, async (req, res) => {
-    try {
-      const expense = await Expense.findOneAndDelete({
-        _id: req.params.id,
-        user: req.user.id, // ✅ Ensure user can only delete their own expenses
-      });
-  
-      if (!expense) {
-        return res.status(404).json({ error: "Expense not found or unauthorized" });
-      }
-  
-      res.json({ message: "Expense deleted successfully" });
-    } catch (error) {
-      console.log(error); // Debugging
-      res.status(500).json({ error: "Error deleting expense" });
+  try {
+    const expense = await Expense.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user.id,
+    });
+
+    if (!expense) {
+      return res
+        .status(404)
+        .json({ error: "Expense not found or unauthorized" });
     }
-  });
-  
+
+    res.json({ message: "Expense deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error deleting expense" });
+  }
+});
 
 module.exports = router;

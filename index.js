@@ -75,7 +75,7 @@ app.use(bodyParser.json());
 
 app.use(
   cors({
-    origin: ["http://localhost:5177"],
+    origin: ["https://finance-ps2-frontend.onrender.com"],
     credentials: true,
   })
 );
